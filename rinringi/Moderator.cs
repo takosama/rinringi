@@ -35,8 +35,11 @@ class Moderator
         };
 
         string? raw = api.Complete(messages);
-        string summary = string.IsNullOrWhiteSpace(raw) ? "まとめを生成できませんでした。" : raw.Trim();
-        bool isApproved = !summary.Contains("【却下】");
+        if (string.IsNullOrWhiteSpace(raw))
+            return new Verdict("まとめを生成できませんでした。", false);
+
+        string summary = raw.Trim();
+        bool isApproved = summary.Contains("【承認】") && !summary.Contains("【却下】");
 
         return new Verdict(summary, isApproved);
     }
