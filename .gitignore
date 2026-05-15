@@ -1,0 +1,10 @@
+# Secrets
+.env
+
+# .NET build outputs
+bin/
+obj/
+
+# User-specific
+*.user
+.vs/
