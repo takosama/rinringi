@@ -4,31 +4,23 @@ using System.Text.Json;
 
 namespace Rinringi;
 
-class OpenAIClient
+class OpenAIClient(string url, string model)
 {
-    public string Url { get; set; }
-    public string Model { get; set; }
+    public string Url { get; } = url;
+    public string Model { get; } = model;
 
-    private static readonly HttpClient httpClient = new HttpClient()
+    private static readonly HttpClient httpClient = new HttpClient
     {
         Timeout = TimeSpan.FromSeconds(120)
     };
 
-    public OpenAIClient(string url, string model)
-    {
-        Url = url;
-        Model = model;
-    }
-
     public string? Complete(IEnumerable<ChatMessage> messages)
     {
         string? apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
-
         if (string.IsNullOrWhiteSpace(apiKey))
             return "OPENAI_API_KEY がありません。環境変数にAPIキーを設定してください。";
 
-        var body = new { model = Model, messages };
-        string json = JsonSerializer.Serialize(body);
+        string json = JsonSerializer.Serialize(new { model = Model, messages });
 
         const int maxRetries = 4;
         int delay = 1000;
@@ -79,10 +71,8 @@ class OpenAIClient
             return null;
 
         JsonElement first = choices[0];
-
         if (!first.TryGetProperty("message", out JsonElement message))
             return null;
-
         if (!message.TryGetProperty("content", out JsonElement content))
             return null;
 

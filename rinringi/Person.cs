@@ -1,26 +1,13 @@
 namespace Rinringi;
 
-class Person
+class Person(OpenAIClient api, string name, int age, string background, string speakingStyle, int tier, bool isApprover)
 {
-    private readonly OpenAIClient api;
-
-    public string Name { get; set; }
-    public int Age { get; set; }
-    public string Background { get; set; }
-    public string SpeakingStyle { get; set; }
-    public int Tier { get; set; }
-    public bool IsApprover { get; set; }
-
-    public Person(OpenAIClient api, string name, int age, string background, string speakingStyle, int tier, bool isApprover)
-    {
-        this.api = api;
-        Name = name;
-        Age = age;
-        Background = background;
-        SpeakingStyle = speakingStyle;
-        Tier = tier;
-        IsApprover = isApprover;
-    }
+    public string Name { get; } = name;
+    public int Age { get; } = age;
+    public string Background { get; } = background;
+    public string SpeakingStyle { get; } = speakingStyle;
+    public int Tier { get; } = tier;
+    public bool IsApprover { get; } = isApprover;
 
     public string Introduce() => $"私は{Name}、{Age}歳です。{Background}";
 
@@ -55,9 +42,6 @@ class Person
         };
 
         string? answer = api.Complete(messages);
-
-        return string.IsNullOrWhiteSpace(answer)
-            ? "発言を生成できませんでした。"
-            : answer.Trim();
+        return string.IsNullOrWhiteSpace(answer) ? "発言を生成できませんでした。" : answer.Trim();
     }
 }

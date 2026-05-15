@@ -33,6 +33,7 @@ class RingiStage
 
             var speeches = members
                 .AsParallel()
+                .AsOrdered()
                 .Select(p => new Speech(round, p.Name, p.Speak(fullTopic, transcript)))
                 .ToList();
 
