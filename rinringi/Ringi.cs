@@ -19,6 +19,11 @@ class Ringi
         Console.WriteLine("議題: " + topic);
         Console.WriteLine();
 
+        string enrichedTopic =
+            topic + "\n\n" +
+            "自分の専門・立場から見えるリスク・コスト・課題・条件を具体的な数値や事実で示しながら議論し、採否を決めること。" +
+            "賛成・反対どちらでも構わないが、自分の判断根拠を明確にすること。";
+
         Verdict RunStage(int tier, string priorConclusion)
         {
             var stageMembers = allMembers.Where(p => p.Tier == tier).ToList();
@@ -31,7 +36,7 @@ class Ringi
             };
             Console.WriteLine($"========== {label} ==========");
             Console.WriteLine();
-            return new RingiStage(stageMembers, roundsPerStage, moderator).Deliberate(topic, priorConclusion);
+            return new RingiStage(stageMembers, roundsPerStage, moderator).Deliberate(enrichedTopic, priorConclusion);
         }
 
         const int maxAttempts = 3;
