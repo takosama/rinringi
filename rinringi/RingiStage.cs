@@ -48,7 +48,6 @@ class RingiStage
 
         Console.WriteLine("--- まとめ ---");
         Verdict verdict = moderator.Evaluate(fullTopic, transcript);
-        Console.WriteLine(verdict.Summary);
         Console.WriteLine();
 
         return verdict;

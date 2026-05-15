@@ -34,7 +34,8 @@ class Moderator
             )
         };
 
-        string? raw = api.Complete(messages);
+        string? raw = api.CompleteStreaming(messages, token => Console.Write(token));
+        Console.WriteLine();
         if (string.IsNullOrWhiteSpace(raw))
             return new Verdict("まとめを生成できませんでした。", false);
 

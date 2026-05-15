@@ -62,6 +62,73 @@ class OpenAIClient(string url, string model)
         return null;
     }
 
+    public string? CompleteStreaming(IEnumerable<ChatMessage> messages, Action<string> onToken)
+    {
+        string? apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+        if (string.IsNullOrWhiteSpace(apiKey))
+            return "OPENAI_API_KEY がありません。環境変数にAPIキーを設定してください。";
+
+        string json = JsonSerializer.Serialize(new { model = Model, messages, stream = true });
+
+        const int maxRetries = 4;
+        int delay = 1000;
+
+        for (int attempt = 0; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Post, Url);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                using HttpResponseMessage response = httpClient
+                    .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
+                    .GetAwaiter().GetResult();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    int status = (int)response.StatusCode;
+                    string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                    if ((status != 429 && status < 500) || attempt == maxRetries)
+                        return $"APIエラー {status}:\n{body}";
+                }
+                else
+                {
+                    var sb = new StringBuilder();
+                    using var stream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
+                    using var reader = new StreamReader(stream);
+
+                    while (!reader.EndOfStream)
+                    {
+                        string? line = reader.ReadLine();
+                        if (string.IsNullOrEmpty(line) || !line.StartsWith("data: ")) continue;
+                        string data = line["data: ".Length..];
+                        if (data == "[DONE]") break;
+
+                        string? token = ExtractDeltaContent(data);
+                        if (token == null) continue;
+                        onToken(token);
+                        sb.Append(token);
+                    }
+
+                    string result = sb.ToString();
+                    if (!string.IsNullOrWhiteSpace(result) || attempt == maxRetries)
+                        return result.Trim();
+                }
+            }
+            catch (Exception ex)
+            {
+                if (attempt == maxRetries)
+                    return "通信または処理中の例外:\n" + ex.Message;
+            }
+
+            Thread.Sleep(delay + Random.Shared.Next(0, 500));
+            delay *= 2;
+        }
+
+        return null;
+    }
+
     private static string? ExtractContent(string json)
     {
         using JsonDocument doc = JsonDocument.Parse(json);
@@ -74,6 +141,23 @@ class OpenAIClient(string url, string model)
         if (!first.TryGetProperty("message", out JsonElement message))
             return null;
         if (!message.TryGetProperty("content", out JsonElement content))
+            return null;
+
+        return content.GetString();
+    }
+
+    private static string? ExtractDeltaContent(string json)
+    {
+        using JsonDocument doc = JsonDocument.Parse(json);
+        JsonElement root = doc.RootElement;
+
+        if (!root.TryGetProperty("choices", out JsonElement choices) || choices.GetArrayLength() == 0)
+            return null;
+
+        JsonElement first = choices[0];
+        if (!first.TryGetProperty("delta", out JsonElement delta))
+            return null;
+        if (!delta.TryGetProperty("content", out JsonElement content))
             return null;
 
         return content.GetString();
