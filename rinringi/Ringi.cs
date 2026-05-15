@@ -41,14 +41,21 @@ class Ringi
 
         for (int i = 1; i < tiers.Length; i++)
         {
-            verdicts[i] = RunStage(tiers[i], verdicts[i - 1].Summary);
+            verdicts[i] = RunStage(tiers[i],
+                $"【下位段（第{tiers[i - 1]}段）の審議結論】\n{verdicts[i - 1].Summary}");
 
             for (int attempt = 1; !verdicts[i].IsApproved && attempt < maxAttempts; attempt++)
             {
+                string rejectionSummary = verdicts[i].Summary;
                 Console.WriteLine($"========== 第{tiers[i]}段が却下 → 第{tiers[i - 1]}段を再審議（{attempt}回目）==========");
                 Console.WriteLine();
-                verdicts[i - 1] = RunStage(tiers[i - 1], $"【第{tiers[i]}段より却下】\n{verdicts[i].Summary}");
-                verdicts[i] = RunStage(tiers[i], verdicts[i - 1].Summary);
+                verdicts[i - 1] = RunStage(tiers[i - 1],
+                    $"【上位段（第{tiers[i]}段）からの却下フィードバック】\n{rejectionSummary}\n\n" +
+                    "上記の指摘を踏まえ、未解決の論点を具体的に解決すること。");
+                verdicts[i] = RunStage(tiers[i],
+                    $"【前回の却下理由】\n{rejectionSummary}\n\n" +
+                    $"【下位段（第{tiers[i - 1]}段）の再審議結論】\n{verdicts[i - 1].Summary}\n\n" +
+                    "前回指摘した問題点が解決されているか確認すること。");
             }
 
             if (!verdicts[i].IsApproved)

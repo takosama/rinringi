@@ -17,7 +17,7 @@ class RingiStage
     {
         string fullTopic = string.IsNullOrWhiteSpace(priorConclusion)
             ? topic
-            : $"{topic}\n\n【前段の稟議結論】\n{priorConclusion}";
+            : $"{topic}\n\n{priorConclusion}";
 
         foreach (var member in members)
             Console.WriteLine(member.Introduce());
