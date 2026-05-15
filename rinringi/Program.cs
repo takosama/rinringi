@@ -6,8 +6,8 @@ Console.OutputEncoding = Encoding.UTF8;
 Env.Load();
 
 var api = new OpenAIClient(
-    "https://api.openai.com/v1/chat/completions",
-    "gpt-5.5"
+    "https://api.deepseek.com/v1/chat/completions",
+    "deepseek-v4-flash"
 );
 
 var members = ParticipantLoader.Load("participants.csv", api);
